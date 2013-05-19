@@ -24,6 +24,60 @@ except:
 	filmsNotFound = []
 
 
+def makeFilmPage(film):
+	fileName = film['FileName']
+	try:
+		shutil.copy(templateDir+'_film.html', webDir+fileName+'.html')
+		with open(webDir+fileName+'.html', "r") as source:
+			lines = source.readlines()
+		with open(webDir+fileName+'.html', "w") as source:
+			for line in lines:
+				oldLine = line
+				for elmt in film:
+					if '$'+elmt.upper()+'$' in line:
+						line = line.replace('$'+elmt.upper()+'$', film[elmt].encode('ascii', 'ignore'))
+				try:
+					source.write(line)
+				except:
+					source.write(oldLine)
+		return True
+	except:
+		raise
+		return False
+
+def makeFilmIndex(filmsList):
+	out=""
+	for film in filmsList:
+		try:
+			out += """<div onclick="window.location='%s.html'">%s<br />
+			\t<span>%s - %s/10</span>
+			\t<p>%s</p>
+			</div>
+			""" % (film['FileName'], film['Title'],
+					 film['Runtime'], film['imdbRating'],
+					 film['Plot'])
+		except:
+			print "problem for an entry while creating index list:"
+			pprint(film)
+			raise
+	try:
+		shutil.copy(templateDir+'_index.html', webDir+'index.html')
+		out=out.encode('ascii', 'ignore')
+		with open(webDir+'index.html', "r") as source:
+			lines = source.readlines()
+		with open(webDir+'index.html', "w") as source:
+			for line in lines:
+				oldLine = line
+				if '$LIST$' in line:
+					line = line.replace('$LIST$',out)
+				try:
+					source.write(line)
+				except:
+					source.write(oldLine)
+	except:
+		print "could not create film index"
+		raise
+
 print "Getting film names:"
 out=""
 for path, dirs, files in os.walk(filmDir):
@@ -77,22 +131,7 @@ for path, dirs, files in os.walk(filmDir):
 							filmsNotFound.append(fileName)
 
 					if fileName not in filmsNotFound:
-						try:
-							shutil.copy(templateDir+'_film.html', webDir+fileName+'.html')
-							with open(webDir+fileName+'.html', "r") as source:
-								lines = source.readlines()
-							with open(webDir+fileName+'.html', "w") as source:
-								for line in lines:
-									oldLine = line
-									for elmt in film:
-										if '$'+elmt.upper()+'$' in line:
-											line = line.replace('$'+elmt.upper()+'$', film[elmt].encode('ascii', 'ignore'))
-									try:
-										source.write(line)
-									except:
-										source.write(oldLine)
-						except:
-							raise
+						makeFilmPage(film)
 
 			elif fileName.endswith(tuple(formatsMightBeUnreadable)):
 				pass
@@ -113,36 +152,6 @@ pprint(filmsNotFound)
 with open(dbDir+'_unknown.json', 'w') as outFile:
 	json.dump(filmsNotFound, outFile)
 
-for film in filmsList:
-	try:
-		out += """<div onclick="window.location='%s.html'">%s<br />
-		\t<span>%s - %s/10</span>
-		\t<p>%s</p>
-		</div>
-		""" % (film['FileName'], film['Title'],
-				 film['Runtime'], film['imdbRating'],
-				 film['Plot'])
-	except:
-		print "problem for an entry while creating index list:"
-		pprint(film)
-		raise
+makeFilmIndex(filmsList)
 
-try:
-	shutil.copy(templateDir+'_index.html', webDir+'index.html')
-	out=out.encode('ascii', 'ignore')
-	with open(webDir+'index.html', "r") as source:
-		lines = source.readlines()
-	with open(webDir+'index.html', "w") as source:
-		for line in lines:
-			oldLine = line
-			if '$LIST$' in line:
-				line = line.replace('$LIST$',out)
-			try:
-				source.write(line)
-			except:
-				source.write(oldLine)
-				
-except:
-	print "could not create film index"
-	raise
 print "done"
