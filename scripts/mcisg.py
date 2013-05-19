@@ -89,6 +89,36 @@ def identifyFilm(fileName):
 		filmYear=''
 	return filmName, filmYear
 
+def findFilm(filmName, filmYear):
+	filmDataURI = "http://omdbapi.com/?t=%s" % (filmName.replace(" ","%20"))
+	if filmYear:
+		filmDataURI+="&y=%s" % (filmYear)
+	film = json.load(urllib2.urlopen(filmDataURI))
+
+	if film['Response'] == 'True' and film['Type'] == "movie":
+		film['PlotFull'] = json.load(urllib2.urlopen(filmDataURI+"&plot=full"))['Plot']
+		return film
+	else:
+		return False
+
+def getFilmPoster(film):
+	global imgDir, webDir
+	if "N/A" not in film['Poster']:
+		localPosterName = imgDir+film['FileName']+".jpg"
+		posterImage = urllib2.urlopen(film['Poster'])
+		with open(localPosterName, 'w') as poster:
+			poster.write(posterImage.read())
+		film['Poster'] = localPosterName.replace(webDir,'')
+	return film['Poster']
+
+def updateFilm(film, fileName, filmFilePaths, isReadable="no"):
+	film['FileName'] = fileName
+	for elmt in filmFilePaths:
+		film[elmt] = elmt
+	film['Readable'] = isReadable
+	film['Poster'] = getFilmPoster(film)
+	return film
+
 print "Getting film names:"
 out=""
 for path, dirs, files in os.walk(filmDir):
@@ -96,17 +126,13 @@ for path, dirs, files in os.walk(filmDir):
 		pass
 	for dir in dirs:
 		for fileName in sorted(os.listdir(path+'/'+dir)):
-			filePath = path+'/'+dir+'/'+fileName
-			filePublicPath = publicPath+'/'+dir+'/'+fileName
+			filmFilePaths = { "LocalPath" : path+'/'+dir+'/'+fileName,
+							  "PublicPath" : publicPath+'/'+dir+'/'+fileName }
 			if fileName.endswith(tuple(formatsReadable)):
 				for ext in formatsReadable:
 					fileName=fileName.replace(ext,"")
 
 				filmName, filmYear = identifyFilm(fileName)
-
-				filmDataURI = "http://omdbapi.com/?t=%s" % (filmName.replace(" ","%20"))
-				if filmYear:
-					filmDataURI+="&y=%s" % (filmYear)
 
 				fileName = ''.join(c for c in filmName if c.isalnum())+filmYear
 				filmDBpath = dbDir+fileName+".json"
@@ -117,19 +143,9 @@ for path, dirs, files in os.walk(filmDir):
 							film = json.load(readFile)
 							filmsList.append(film)
 					except:
-						film = json.load(urllib2.urlopen(filmDataURI))
-						if film['Response'] == 'True' and film['Type'] == "movie":
-							film['FileName'] = fileName
-							film['LocalPath'] = filePath
-							film['PublicPath'] = filePublicPath
-							film['Readable'] = "yes"
-							film['PlotFull'] = json.load(urllib2.urlopen(filmDataURI+"&plot=full"))['Plot']
-							if "N/A" not in film['Poster']:
-								localPosterName = imgDir+fileName+".jpg"
-								posterImage = urllib2.urlopen(film['Poster'])
-								with open(localPosterName, 'w') as poster:
-									poster.write(posterImage.read())
-								film['Poster'] = localPosterName.replace(webDir,'')
+						film = findFilm(filmName, filmYear)
+						if film:
+							updateFilm(film, fileName, filmFilePaths, "yes")
 							with open(filmDBpath, 'w') as outFile:
 								json.dump(film, outFile)
 							filmsList.append(film)
