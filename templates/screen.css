@@ -1,0 +1,40 @@
+body {
+	width: 90%;
+	margin: auto;
+	background-color: #cfcfcf;
+	font-family: helvetica;
+}
+
+a:link {
+	color: #327195;
+}
+
+a:visited {
+	color: #0E1D2A;
+}
+
+#list {
+	border: 2px solid grey;
+}
+
+	#list hr {
+		width: 70%;
+	}
+
+.listfilm {
+	margin: 2px;
+}
+
+	.listfilm p {
+		margin: auto;
+	}
+
+#poster {
+	margin: 10px 20px 0px 0px;
+	float: left;
+}
+
+#plotfull {
+	margin: 8px 0 30px 10px;
+	line-height: 1.2;
+}
