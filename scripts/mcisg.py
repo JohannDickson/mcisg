@@ -78,6 +78,17 @@ def makeFilmIndex(filmsList):
 		print "could not create film index"
 		raise
 
+def identifyFilm(fileName):
+	filmYear = re.search('\((\d{4})\)',fileName)
+	if filmYear:
+		filmYear = filmYear.group(1)
+		filmName=fileName.replace('('+filmYear+')',"")
+		filmName=filmName.strip()
+	else:
+		filmName=fileName.strip()
+		filmYear=''
+	return filmName, filmYear
+
 print "Getting film names:"
 out=""
 for path, dirs, files in os.walk(filmDir):
@@ -91,18 +102,13 @@ for path, dirs, files in os.walk(filmDir):
 				for ext in formatsReadable:
 					fileName=fileName.replace(ext,"")
 
-				filmDataURI = "http://omdbapi.com/?t=%s" % (fileName.replace(" ","%20"))
+				filmName, filmYear = identifyFilm(fileName)
 
-				year = re.search('\((\d{4})\)',fileName)
-				if year:
-					year = year.group(1)
-					fileName=fileName.replace('('+year+')',"")
-					fileName=fileName.strip()
-					filmDataURI = "http://omdbapi.com/?t=%s&y=%s" % (fileName.replace(" ","%20"),year)
-				else:
-					year=""
+				filmDataURI = "http://omdbapi.com/?t=%s" % (filmName.replace(" ","%20"))
+				if filmYear:
+					filmDataURI+="&y=%s" % (filmYear)
 
-				fileName = ''.join(c for c in fileName if c.isalnum())+year
+				fileName = ''.join(c for c in filmName if c.isalnum())+filmYear
 				filmDBpath = dbDir+fileName+".json"
 
 				if fileName not in filmsNotFound:
