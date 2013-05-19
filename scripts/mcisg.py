@@ -128,9 +128,14 @@ for path, dirs, files in os.walk(filmDir):
 		for fileName in sorted(os.listdir(path+'/'+dir)):
 			filmFilePaths = { "LocalPath" : path+'/'+dir+'/'+fileName,
 							  "PublicPath" : publicPath+'/'+dir+'/'+fileName }
-			if fileName.endswith(tuple(formatsReadable)):
-				for ext in formatsReadable:
-					fileName=fileName.replace(ext,"")
+
+			fileName, ext = os.path.splitext(fileName)
+			if ext in formatsReadable or ext in formatsMightBeUnreadable:
+
+				if ext in formatsReadable:
+					filmReadable = "yes"
+				elif ext in formatsMightBeUnreadable:
+					filmReadable = "maybe"
 
 				filmName, filmYear = identifyFilm(fileName)
 
@@ -145,7 +150,7 @@ for path, dirs, files in os.walk(filmDir):
 					except:
 						film = findFilm(filmName, filmYear)
 						if film:
-							updateFilm(film, fileName, filmFilePaths, "yes")
+							updateFilm(film, fileName, filmFilePaths, filmReadable)
 							with open(filmDBpath, 'w') as outFile:
 								json.dump(film, outFile)
 							filmsList.append(film)
@@ -155,12 +160,10 @@ for path, dirs, files in os.walk(filmDir):
 					if fileName not in filmsNotFound:
 						makeFilmPage(film)
 
-			elif fileName.endswith(tuple(formatsMightBeUnreadable)):
-				pass
-			elif fileName.endswith('.srt'):
+
+			elif ext == '.srt':
 				pass
 			else:
-				ext = os.path.splitext(fileName)[1]
 				if ext not in formatsUnknown:
 					formatsUnknown.append(ext)
 
