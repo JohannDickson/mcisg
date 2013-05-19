@@ -112,7 +112,7 @@ for path, dirs, files in os.walk(filmDir):
 							filmsList.append(film)
 					except:
 						film = json.load(urllib2.urlopen(filmDataURI))
-						if film['Response'] == 'True':
+						if film['Response'] == 'True' and film['Type'] == "movie":
 							film['FileName'] = fileName
 							film['LocalPath'] = filePath
 							film['PublicPath'] = filePublicPath
