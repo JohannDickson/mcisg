@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import os, sys, json, re, shutil, urllib2
-from glob import glob
 from pprint import pprint
 
 filmDir = "/home/user/Public/Videos"
@@ -18,7 +17,7 @@ formatsUnknown = []
 
 filmsList = []
 try:
-	with open(dbDir+'_unknown.json','r') as knownUnfoundFilms:
+	with open(dbDir+'_unknown.json', 'r') as knownUnfoundFilms:
 		filmsNotFound = json.load(knownUnfoundFilms)
 except:
 	filmsNotFound = []
@@ -45,8 +44,9 @@ def makeFilmPage(film):
 		raise
 		return False
 
+
 def makeFilmIndex(filmsList):
-	out=""
+	out = ""
 	for film in filmsList:
 		try:
 			out += """<div onclick="window.location='%s.html'" class="listfilm"><a href="%s.html">%s</a><br />
@@ -54,22 +54,22 @@ def makeFilmIndex(filmsList):
 			\t<p>%s</p>
 			</div><hr />
 			""" % (film['FileName'], film['FileName'], film['Title'],
-					 film['Runtime'], film['Year'], film['imdbRating'],
-					 film['Plot'])
+					film['Runtime'], film['Year'], film['imdbRating'],
+					film['Plot'])
 		except:
 			print "problem for an entry while creating index list:"
 			pprint(film)
 			raise
 	try:
 		shutil.copy(templateDir+'_index.html', webDir+'index.html')
-		out=out.encode('ascii', 'ignore')
+		out = out.encode('ascii', 'ignore')
 		with open(webDir+'index.html', "r") as source:
 			lines = source.readlines()
 		with open(webDir+'index.html', "w") as source:
 			for line in lines:
 				oldLine = line
 				if '$LIST$' in line:
-					line = line.replace('$LIST$',out)
+					line = line.replace('$LIST$', out)
 				try:
 					source.write(line)
 				except:
@@ -78,21 +78,23 @@ def makeFilmIndex(filmsList):
 		print "could not create film index"
 		raise
 
+
 def identifyFilm(fileName):
-	filmYear = re.search('\((\d{4})\)',fileName)
+	filmYear = re.search('\((\d{4})\)', fileName)
 	if filmYear:
 		filmYear = filmYear.group(1)
-		filmName=fileName.replace('('+filmYear+')',"")
-		filmName=filmName.strip()
+		filmName = fileName.replace('('+filmYear+')', "")
+		filmName = filmName.strip()
 	else:
-		filmName=fileName.strip()
-		filmYear=''
+		filmName = fileName.strip()
+		filmYear = ''
 	return filmName, filmYear
 
+
 def findFilm(filmName, filmYear):
-	filmDataURI = "http://omdbapi.com/?t=%s" % (filmName.replace(" ","%20"))
+	filmDataURI = "http://omdbapi.com/?t=%s" % (filmName.replace(" ", "%20"))
 	if filmYear:
-		filmDataURI+="&y=%s" % (filmYear)
+		filmDataURI += "&y=%s" % (filmYear)
 	film = json.load(urllib2.urlopen(filmDataURI))
 
 	if film['Response'] == 'True' and film['Type'] == "movie":
@@ -101,6 +103,7 @@ def findFilm(filmName, filmYear):
 	else:
 		return False
 
+
 def getFilmPoster(film):
 	global imgDir, webDir
 	if "N/A" not in film['Poster']:
@@ -108,8 +111,9 @@ def getFilmPoster(film):
 		posterImage = urllib2.urlopen(film['Poster'])
 		with open(localPosterName, 'w') as poster:
 			poster.write(posterImage.read())
-		film['Poster'] = localPosterName.replace(webDir,'')
+		film['Poster'] = localPosterName.replace(webDir, '')
 	return film['Poster']
+
 
 def updateFilm(film, fileName, filmFilePaths, isReadable="no"):
 	film['FileName'] = fileName
@@ -120,25 +124,22 @@ def updateFilm(film, fileName, filmFilePaths, isReadable="no"):
 	return film
 
 print "Getting film names:"
-out=""
 for path, dirs, files in os.walk(filmDir):
 	for file in files:
 		pass
 	for dir in dirs:
 		for fileName in sorted(os.listdir(path+'/'+dir)):
-			filmFilePaths = { "LocalPath" : path+'/'+dir+'/'+fileName,
-							  "PublicPath" : publicPath+'/'+dir+'/'+fileName }
+			filmFilePaths = {"LocalPath": path+'/'+dir+'/'+fileName,
+									"PublicPath": publicPath+'/'+dir+'/'+fileName}
 
 			fileName, ext = os.path.splitext(fileName)
 			if ext in formatsReadable or ext in formatsMightBeUnreadable:
-
 				if ext in formatsReadable:
 					filmReadable = "yes"
 				elif ext in formatsMightBeUnreadable:
 					filmReadable = "maybe"
 
 				filmName, filmYear = identifyFilm(fileName)
-
 				fileName = ''.join(c for c in filmName if c.isalnum())+filmYear
 				filmDBpath = dbDir+fileName+".json"
 
@@ -159,7 +160,6 @@ for path, dirs, files in os.walk(filmDir):
 
 					if fileName not in filmsNotFound:
 						makeFilmPage(film)
-
 
 			elif ext == '.srt':
 				pass
