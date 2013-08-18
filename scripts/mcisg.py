@@ -92,7 +92,7 @@ def identifyFilm(fileName):
 
 
 def findFilm(filmName, filmYear):
-	filmDataURI = "http://omdbapi.com/?t=%s" % (filmName.replace(" ", "%20"))
+	filmDataURI = "http://omdbapi.com/?t=%s" % (urllib2.quote(filmName))
 	if filmYear:
 		filmDataURI += "&y=%s" % (filmYear)
 	film = json.load(urllib2.urlopen(filmDataURI))
