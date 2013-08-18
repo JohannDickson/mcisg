@@ -140,47 +140,44 @@ def updateFilm(film, fileName, filmFilePaths, isReadable="no"):
 
 print "Getting film names:"
 for path, dirs, files in os.walk(filmDir):
-	for file in files:
-		pass
-	for dir in dirs:
-		for fileName in sorted(os.listdir(path+'/'+dir)):
-			filmFilePaths = {"LocalPath": path+'/'+dir+'/'+fileName,
-									"PublicPath": publicPath+'/'+dir+'/'+fileName}
+	for fileName in sorted(files):
+		filmFilePaths = {"LocalPath": path+'/'+fileName,
+						"PublicPath": publicPath+'/'+fileName}
 
-			fileName, ext = os.path.splitext(fileName)
-			if ext in formatsReadable or ext in formatsMightBeUnreadable:
-				if ext in formatsReadable:
-					filmReadable = "yes"
-				elif ext in formatsMightBeUnreadable:
-					filmReadable = "maybe"
+		fileName, ext = os.path.splitext(fileName)
+		if ext in formatsReadable or ext in formatsMightBeUnreadable:
+			if ext in formatsReadable:
+				filmReadable = "yes"
+			elif ext in formatsMightBeUnreadable:
+				filmReadable = "maybe"
 
-				filmName, filmYear = identifyFilm(fileName)
-				fileName = ''.join(c for c in filmName if c.isalnum())+filmYear
-				filmDBpath = dbDir+fileName+".json"
+			filmName, filmYear = identifyFilm(fileName)
+			fileName = ''.join(c for c in filmName if c.isalnum())+filmYear
+			filmDBpath = dbDir+fileName+".json"
+
+			if fileName not in filmsNotFound:
+				try:
+					with open(filmDBpath, 'rb') as readFile:
+						film = json.load(readFile)
+						filmsList.append(film)
+				except:
+					film = findFilm(filmName, filmYear)
+					if film:
+						updateFilm(film, fileName, filmFilePaths, filmReadable)
+						with open(filmDBpath, 'w') as outFile:
+							json.dump(film, outFile)
+						filmsList.append(film)
+					else:
+						filmsNotFound.append(fileName)
 
 				if fileName not in filmsNotFound:
-					try:
-						with open(filmDBpath, 'rb') as readFile:
-							film = json.load(readFile)
-							filmsList.append(film)
-					except:
-						film = findFilm(filmName, filmYear)
-						if film:
-							updateFilm(film, fileName, filmFilePaths, filmReadable)
-							with open(filmDBpath, 'w') as outFile:
-								json.dump(film, outFile)
-							filmsList.append(film)
-						else:
-							filmsNotFound.append(fileName)
+					makeFilmPage(film)
 
-					if fileName not in filmsNotFound:
-						makeFilmPage(film)
-
-			elif ext == '.srt':
-				pass
-			else:
-				if ext not in formatsUnknown:
-					formatsUnknown.append(ext)
+		elif ext == '.srt':
+			pass
+		else:
+			if ext not in formatsUnknown:
+				formatsUnknown.append(ext)
 
 
 print "OK: %d films" % (len(filmsList))
