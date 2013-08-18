@@ -94,12 +94,29 @@ def identifyFilm(fileName):
 def findFilm(filmName, filmYear):
 	filmDataURI = "http://omdbapi.com/?t="+urllib2.quote(filmName)+(("&y="+filmYear) if filmYear else '')
 	film = json.load(urllib2.urlopen(filmDataURI))
-
 	if film['Response'] == 'True' and film['Type'] == "movie":
 		film['PlotFull'] = json.load(urllib2.urlopen(filmDataURI+"&plot=full"))['Plot']
 		return film
-	else:
-		return False
+
+	filmDataURI = "http://mymovieapi.com/?&q="+urllib2.quote(filmName)+(("&year="+filmYear) if filmYear else '')
+	film = json.load(urllib2.urlopen(filmDataURI))
+	if 'error' not in film:
+		filmDataURI = "http://omdbapi.com/?i="+film[0]['imdb_id']
+		film = json.load(urllib2.urlopen(filmDataURI))
+		if film['Response'] == 'True' and film['Type'] == "movie":
+			film['PlotFull'] = json.load(urllib2.urlopen(filmDataURI+"&plot=full"))['Plot']
+			return film
+
+	filmDataURI = "http://deanclatworthy.com/imdb?&q="+urllib2.quote(filmName)+(("&year="+filmYear) if filmYear else '')
+	film = json.load(urllib2.urlopen(filmDataURI))
+	if 'error' not in film:
+		filmDataURI = "http://omdbapi.com/?i="+film['imdbid']
+		film = json.load(urllib2.urlopen(filmDataURI))
+		if film['Response'] == 'True' and film['Type'] == "movie":
+			film['PlotFull'] = json.load(urllib2.urlopen(filmDataURI+"&plot=full"))['Plot']
+			return film
+
+	return False
 
 
 def getFilmPoster(film):
