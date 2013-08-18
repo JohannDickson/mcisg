@@ -49,11 +49,11 @@ def makeFilmIndex(filmsList):
 	out = ""
 	for film in filmsList:
 		try:
-			out += """<div onclick="window.location='%s.html'" class="listfilm"><a href="%s.html">%s</a><br />
+			out += """<div class="listfilm"><a href="%s.html">%s</a><br />
 			\t<span>%s - %s - %s/10</span>
 			\t<p>%s</p>
 			</div><hr />
-			""" % (film['FileName'], film['FileName'], film['Title'],
+			""" % (film['FileName'], film['Title'],
 					film['Runtime'], film['Year'], film['imdbRating'],
 					film['Plot'])
 		except:
